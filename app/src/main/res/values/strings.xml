@@ -2,4 +2,6 @@
     <string name="app_name">MemoryGame</string>
     <string name="moves_0">Moves: 0</string>
     <string name="pairs_0">Pairs: 0</string>
+    <string name="string_save">Save</string>
+    <string name="string_hint_game_name">Game name (example: \'panda_fun\')</string>
 </resources>
