@@ -9,6 +9,10 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/mi_new_size"
+        android:icon="@drawable/ic_baseline_add_box_24"
         android:title="Choose new size"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/mi_custom_game"
+        android:title="Create custom game" />
 </menu>

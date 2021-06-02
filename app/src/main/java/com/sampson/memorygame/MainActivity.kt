@@ -1,6 +1,7 @@
 package com.sampson.memorygame
 
 import android.animation.ArgbEvaluator
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -20,6 +21,7 @@ import com.sampson.memorygame.models.BoardSize
 import com.sampson.memorygame.models.MemoryCard
 import com.sampson.memorygame.models.MemoryGame
 import com.sampson.memorygame.utils.DEFAULT_ICONS
+import com.sampson.memorygame.utils.EXTRA_BOARD_SIZE
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.system.exitProcess
 
@@ -27,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        private const val CREATE_REQUEST_CODE = 248
     }
 
     private lateinit var clRoot: ConstraintLayout
@@ -72,9 +75,28 @@ class MainActivity : AppCompatActivity() {
                 showNewSizeDialog()
                 return true
             }
+            R.id.mi_custom_game -> {
+                showCreationDialog()
+                return true
+            }
 
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun showCreationDialog() {
+        val boardSizeView = LayoutInflater.from(this).inflate(R.layout.dialog_board_size, null)
+        val radioGroupSize = boardSizeView.findViewById<RadioGroup>(R.id.radioGroupBoardSize)
+        showAlertDialog("Create you own memory board ", boardSizeView, View.OnClickListener {
+            val desireBoardSize = when (radioGroupSize.checkedRadioButtonId) {
+                R.id.rbEasy -> BoardSize.EASY
+                R.id.rbMedium -> BoardSize.MEDIUM
+                else -> BoardSize.HARD
+            }
+            val intent = Intent(this, CreateActivity::class.java)
+            intent.putExtra(EXTRA_BOARD_SIZE, desireBoardSize)
+            startActivityForResult(intent, CREATE_REQUEST_CODE)
+        })
     }
 
     private fun showNewSizeDialog() {
