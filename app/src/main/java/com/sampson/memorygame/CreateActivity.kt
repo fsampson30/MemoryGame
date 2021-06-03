@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputFilter
+import android.text.TextWatcher
 import android.util.Log
 import android.view.MenuItem
 import android.widget.Button
@@ -25,6 +28,8 @@ class CreateActivity : AppCompatActivity() {
         private const val PICK_PHOTO_CODE = 655
         private const val READ_EXTERNAL_PHOTOS_CODE = 248
         private const val READ_PHOTOS_PERMISSION = android.Manifest.permission.READ_EXTERNAL_STORAGE
+        private const val MIN_GAME_NAME_LENGHT = 3
+        private const val MAX_GAME_NAME_LENGHT = 14
     }
 
     private lateinit var rvImagePicker: RecyclerView
@@ -48,6 +53,21 @@ class CreateActivity : AppCompatActivity() {
         boardSize = intent.getSerializableExtra(EXTRA_BOARD_SIZE) as BoardSize
         numImagesRequired = boardSize.getNumPairs()
         supportActionBar?.title = "Choose pics (0 / $numImagesRequired)"
+
+        btnSave.setOnClickListener{
+            Toast.makeText(this,"TESTE",Toast.LENGTH_LONG).show()
+        }
+
+        etGameName.filters = arrayOf(InputFilter.LengthFilter(MAX_GAME_NAME_LENGHT))
+        etGameName.addTextChangedListener(object: TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                btnSave.isEnabled = shouldEnableSaveButton()
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+            override fun afterTextChanged(s: Editable?) { }
+
+        })
 
         adapter = ImagePickerAdapter(this, chosenImageUris, boardSize, object : ImagePickerAdapter.ImageClickListener {
                 override fun onPlaceholderClicked() {
@@ -114,6 +134,12 @@ class CreateActivity : AppCompatActivity() {
     }
 
     private fun shouldEnableSaveButton(): Boolean {
+        if (chosenImageUris.size != numImagesRequired){
+            return false
+        }
+        if (etGameName.text.isBlank() || etGameName.text.length < MIN_GAME_NAME_LENGHT){
+            return false
+        }
         return true
     }
 
