@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "534907022082",
+    "project_id": "my-memory-62580",
+    "storage_bucket": "my-memory-62580.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534907022082:android:76aef45a93349ba81ff01b",
+        "android_client_info": {
+          "package_name": "com.sampson.memorygame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "534907022082-kee30lmug843cl0nn2o2t1844gfk3s5o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_72uE9NpN8Y9VNmmHyPiYqNM3EXT07gc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "534907022082-kee30lmug843cl0nn2o2t1844gfk3s5o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

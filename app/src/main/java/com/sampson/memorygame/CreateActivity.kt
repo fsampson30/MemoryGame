@@ -20,6 +20,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.sampson.memorygame.models.BoardSize
 import com.sampson.memorygame.utils.BitmapScaler
 import com.sampson.memorygame.utils.EXTRA_BOARD_SIZE
@@ -46,6 +49,8 @@ class CreateActivity : AppCompatActivity() {
     private lateinit var boardSize: BoardSize
     private var numImagesRequired = -1
     private val chosenImageUris = mutableListOf<Uri>()
+    private val storage = Firebase.storage
+    private val db = Firebase.firestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,27 +65,32 @@ class CreateActivity : AppCompatActivity() {
         numImagesRequired = boardSize.getNumPairs()
         supportActionBar?.title = "Choose pics (0 / $numImagesRequired)"
 
-        btnSave.setOnClickListener{
+        btnSave.setOnClickListener {
             saveDataToFirebase()
         }
 
         etGameName.filters = arrayOf(InputFilter.LengthFilter(MAX_GAME_NAME_LENGTH))
-        etGameName.addTextChangedListener(object: TextWatcher{
+        etGameName.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 btnSave.isEnabled = shouldEnableSaveButton()
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
-            override fun afterTextChanged(s: Editable?) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {}
 
         })
 
-        adapter = ImagePickerAdapter(this, chosenImageUris, boardSize, object : ImagePickerAdapter.ImageClickListener {
+        adapter = ImagePickerAdapter(
+            this,
+            chosenImageUris,
+            boardSize,
+            object : ImagePickerAdapter.ImageClickListener {
                 override fun onPlaceholderClicked() {
                     if (isPermissionGranted(this@CreateActivity, READ_PHOTOS_PERMISSION)) {
                         launchIntentForPhotos()
                     } else {
-                        requestPermission(this@CreateActivity, READ_PHOTOS_PERMISSION, READ_EXTERNAL_PHOTOS_CODE
+                        requestPermission(
+                            this@CreateActivity, READ_PHOTOS_PERMISSION, READ_EXTERNAL_PHOTOS_CODE
                         )
                     }
                 }
@@ -140,15 +150,45 @@ class CreateActivity : AppCompatActivity() {
     }
 
     private fun saveDataToFirebase() {
+        val customGameName = etGameName.text.toString()
         Log.i(TAG, "saveDataToFirebase")
-        for ((index, photoUri) in chosenImageUris.withIndex()){
+        var didEncounterError = false
+        val uploadedImageUrl = mutableListOf<String>()
+        for ((index, photoUri) in chosenImageUris.withIndex()) {
             val imageByteArray = getImageByteArray(photoUri)
+            val filePath = "images/$customGameName/${System.currentTimeMillis()}-${index}.jpg"
+            val photoReference = storage.reference.child(filePath)
+            photoReference.putBytes(imageByteArray)
+                .continueWithTask { photoUploadTask ->
+                    Log.i(TAG, "Uploaded bytes: ${photoUploadTask.result?.bytesTransferred}")
+                    photoReference.downloadUrl
+                }.addOnCompleteListener { downloadUrlTask ->
+                    if (!downloadUrlTask.isSuccessful) {
+                        Log.e(TAG, "Exception with Firebase storage", downloadUrlTask.exception)
+                        Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
+                        didEncounterError = true
+                        return@addOnCompleteListener
+                    }
+                    if (didEncounterError) {
+                        return@addOnCompleteListener
+                    }
+                    val downloadUrl = downloadUrlTask.result.toString()
+                    uploadedImageUrl.add(downloadUrl)
+                    Log.i(TAG, "Finish uploading $photoUri, num uploaded ${uploadedImageUrl.size}")
+                    if (uploadedImageUrl.size == chosenImageUris.size){
+                        handleAllImagesUploaded(customGameName, uploadedImageUrl)
+                    }
+                }
 
         }
     }
 
+    private fun handleAllImagesUploaded(gameName: String, imageUrls: MutableList<String> ) {
+        // TODO: upload this to Firestore
+    }
+
     private fun getImageByteArray(photoUri: Uri): ByteArray {
-        val originalBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P){
+        val originalBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(contentResolver, photoUri)
             ImageDecoder.decodeBitmap(source)
         } else {
@@ -163,10 +203,10 @@ class CreateActivity : AppCompatActivity() {
     }
 
     private fun shouldEnableSaveButton(): Boolean {
-        if (chosenImageUris.size != numImagesRequired){
+        if (chosenImageUris.size != numImagesRequired) {
             return false
         }
-        if (etGameName.text.isBlank() || etGameName.text.length < MIN_GAME_NAME_LENGTH){
+        if (etGameName.text.isBlank() || etGameName.text.length < MIN_GAME_NAME_LENGTH) {
             return false
         }
         return true
