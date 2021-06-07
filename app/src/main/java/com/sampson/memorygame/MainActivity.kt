@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
 
         txtPairs.setTextColor(ContextCompat.getColor(this, R.color.color_progress_none))
         setupBoard()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
