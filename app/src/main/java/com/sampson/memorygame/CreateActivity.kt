@@ -1,6 +1,7 @@
 package com.sampson.memorygame
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -24,10 +25,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.sampson.memorygame.models.BoardSize
-import com.sampson.memorygame.utils.BitmapScaler
-import com.sampson.memorygame.utils.EXTRA_BOARD_SIZE
-import com.sampson.memorygame.utils.isPermissionGranted
-import com.sampson.memorygame.utils.requestPermission
+import com.sampson.memorygame.utils.*
 import java.io.ByteArrayOutputStream
 
 class CreateActivity : AppCompatActivity() {
@@ -175,7 +173,7 @@ class CreateActivity : AppCompatActivity() {
                     val downloadUrl = downloadUrlTask.result.toString()
                     uploadedImageUrl.add(downloadUrl)
                     Log.i(TAG, "Finish uploading $photoUri, num uploaded ${uploadedImageUrl.size}")
-                    if (uploadedImageUrl.size == chosenImageUris.size){
+                    if (uploadedImageUrl.size == chosenImageUris.size) {
                         handleAllImagesUploaded(customGameName, uploadedImageUrl)
                     }
                 }
@@ -183,8 +181,27 @@ class CreateActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleAllImagesUploaded(gameName: String, imageUrls: MutableList<String> ) {
-        // TODO: upload this to Firestore
+    private fun handleAllImagesUploaded(gameName: String, imageUrls: MutableList<String>) {
+        db.collection("games").document(gameName)
+            .set(mapOf("images" to imageUrls))
+            .addOnCompleteListener { gameCreationTask ->
+                if (!gameCreationTask.isSuccessful) {
+                    Log.e(TAG, "Exception with game creation", gameCreationTask.exception)
+                    Toast.makeText(this, "Failed game creation", Toast.LENGTH_SHORT).show()
+                    return@addOnCompleteListener
+                }
+                Log.i(TAG, "Successfully created game $gameName")
+                AlertDialog.Builder(this)
+                    .setTitle("Upload complete! Let's play your game '$gameName'")
+                    .setPositiveButton("OK"){_, _ ->
+                        val resultData = Intent()
+                        resultData.putExtra(EXTRA_GAME_NAME, gameName)
+                        setResult(Activity.RESULT_OK, resultData)
+                        finish()
+                    }.show()
+            }
+
+
     }
 
     private fun getImageByteArray(photoUri: Uri): ByteArray {
