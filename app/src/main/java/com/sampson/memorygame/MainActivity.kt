@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -25,6 +26,7 @@ import com.sampson.memorygame.models.MemoryGame
 import com.sampson.memorygame.models.UserImageList
 import com.sampson.memorygame.utils.EXTRA_BOARD_SIZE
 import com.sampson.memorygame.utils.EXTRA_GAME_NAME
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -85,6 +87,10 @@ class MainActivity : AppCompatActivity() {
                 showCreationDialog()
                 return true
             }
+            R.id.mi_download -> {
+                showDownloadDialog()
+                return true
+            }
 
         }
         return super.onOptionsItemSelected(item)
@@ -102,6 +108,16 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    private fun showDownloadDialog() {
+        val boardDownloadView = LayoutInflater.from(this).inflate(R.layout.dialog_download_size, null)
+        showAlertDialog("Fetch memory game", boardDownloadView, View.OnClickListener {
+            val etDownloadGame = boardDownloadView.findViewById<EditText>(R.id.etDowloadGame)
+            val gameToDownload = etDownloadGame.text.toString().trim()
+            downloadGame(gameToDownload)
+        })
+
+    }
+
     private fun downloadGame(customGameName: String) {
         db.collection("games").document(customGameName).get().addOnSuccessListener { document ->
             val userImageList = document.toObject(UserImageList::class.java)
@@ -113,9 +129,12 @@ class MainActivity : AppCompatActivity() {
             val numCards = userImageList.images.size * 2
             boardSize = BoardSize.getByValue(numCards)
             customGameImages = userImageList.images
-            setupBoard()
+            for (imageUrl in userImageList.images) {
+                Picasso.get().load(imageUrl).fetch()
+            }
+            Snackbar.make(clRoot, "You're now playing '$customGameName'!", Snackbar.LENGTH_LONG).show()
             gameName = customGameName
-
+            setupBoard()
         }.addOnFailureListener{ exception ->
             Log.e(TAG, "Exception when retrieving game", exception )
 
@@ -175,16 +194,16 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = gameName ?: getString(R.string.app_name)
         when (boardSize) {
             BoardSize.EASY -> {
-                txtMoves.text = "Easy: 4 x 2"
-                txtPairs.text = "Pairs: 0 / 4"
+                txtMoves.text = getString(R.string.txtmoves_easy)
+                txtPairs.text = getString(R.string.txtpairs_easy)
             }
             BoardSize.MEDIUM -> {
-                txtMoves.text = "Medium: 6 x 3"
-                txtPairs.text = "Pairs: 0 / 9"
+                txtMoves.text = getString(R.string.txtmoves_medium)
+                txtPairs.text = getString(R.string.txtpairs_medium)
             }
             BoardSize.HARD -> {
-                txtMoves.text = "Hard: 6 x 4"
-                txtPairs.text = "Pairs: 0 / 12"
+                txtMoves.text = getString(R.string.txtmoves_hard)
+                txtPairs.text = getString(R.string.txtpairs_hard)
             }
         }
         memoryGame = MemoryGame(boardSize, customGameImages)

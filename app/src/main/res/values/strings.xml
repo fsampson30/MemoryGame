@@ -4,4 +4,11 @@
     <string name="pairs_0">Pairs: 0</string>
     <string name="string_save">Save</string>
     <string name="string_hint_game_name">Game name (example: \'panda_fun\')</string>
+    <string name="txtmoves_easy">Easy: 4 x 2</string>
+    <string name="txtmoves_medium">Medium: 6 x 3</string>
+    <string name="txtmoves_hard">Hard: 6 x 4</string>
+    <string name="txtpairs_easy">Pairs: 0 / 4</string>
+    <string name="txtpairs_medium">Pairs: 0 / 9</string>
+    <string name="txtpairs_hard">Pairs: 0 / 12</string>
+    <string name="enter_game_name">Enter game name:</string>
 </resources>
